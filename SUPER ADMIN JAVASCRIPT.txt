@@ -1,0 +1,164 @@
+<script>
+  let allData = [];
+
+  window.onload = function() {
+    loadData();
+  };
+
+  function loadData() {
+    document.getElementById('tableBody').innerHTML = '<tr><td colspan="9" class="text-center">Memuat data...</td></tr>';
+    google.script.run
+      .withSuccessHandler(function(data) {
+        allData = data;
+        filterAndSortData();
+      })
+      .withFailureHandler(function(error) {
+        alert("Gagal memuat data: " + error.message);
+      })
+      .getDataPeserta();
+  }
+
+  function filterAndSortData() {
+    const searchKeyword = document.getElementById('searchInput').value.toLowerCase();
+    const sortOrder = document.getElementById('sortJam').value;
+
+    let filtered = allData.filter(item => {
+      return item.nama.toLowerCase().includes(searchKeyword) || 
+             item.alamat.toLowerCase().includes(searchKeyword) ||
+             item.telepon.includes(searchKeyword);
+    });
+
+    filtered.sort((a, b) => {
+      let timeA = a.jam || "00:00";
+      let timeB = b.jam || "00:00";
+      if (sortOrder === 'asc') {
+        return timeA.localeCompare(timeB);
+      } else {
+        return timeB.localeCompare(timeA);
+      }
+    });
+
+    renderTable(filtered);
+  }
+
+  function renderTable(data) {
+    const tbody = document.getElementById('tableBody');
+    tbody.innerHTML = '';
+
+    if (data.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="9" class="text-center">Tidak ada data ditemukan.</td></tr>';
+      return;
+    }
+
+    data.forEach((item, index) => {
+      let badgeClass = item.keterangan && item.keterangan.toLowerCase() === 'lunas' ? 'badge-lunas' : 'badge-belum';
+      let tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td>${index + 1}</td>
+        <td>${item.timestamp}</td>
+        <td><b>${item.nama}</b></td>
+        <td>${item.alamat}</td>
+        <td>${item.telepon}</td>
+        <td>${item.tanggal}</td>
+        <td><b>${item.jam}</b></td>
+        <td><span class="badge ${badgeClass}">${item.keterangan || '-'}</span></td>
+        <td>
+          <button class="btn btn-primary" onclick="openEdit(${item.rowId}, '${item.nama}', '${item.tanggal}', '${item.jam}', '${item.keterangan}')">Edit</button>
+          <button class="btn btn-danger" onclick="hapusData(${item.rowId})">Hapus</button>
+        </td>
+      `;
+      tbody.appendChild(tr);
+    });
+  }
+
+  function openEdit(rowId, nama, tanggal, jam, keterangan) {
+    document.getElementById('editRowId').value = rowId;
+    document.getElementById('editNama').value = nama;
+    document.getElementById('editTanggal').value = tanggal;
+    document.getElementById('editJam').value = jam;
+    document.getElementById('editKeterangan').value = keterangan;
+    document.getElementById('editModal').style.display = 'flex';
+  }
+
+  function closeModal() {
+    document.getElementById('editModal').style.display = 'none';
+  }
+
+  function saveEdit() {
+    const rowId = document.getElementById('editRowId').value;
+    const nama = document.getElementById('editNama').value;
+    const tanggal = document.getElementById('editTanggal').value;
+    const jam = document.getElementById('editJam').value;
+    const keterangan = document.getElementById('editKeterangan').value;
+
+    google.script.run
+      .withSuccessHandler(function(res) {
+        alert(res);
+        closeModal();
+        loadData();
+      })
+      .withFailureHandler(function(err) {
+        alert("Gagal menyimpan: " + err.message);
+      })
+      .updateData(rowId, nama, tanggal, jam, keterangan);
+  }
+
+  function hapusData(rowId) {
+    if (confirm("Yakin ingin menghapus data peserta ini dari spreadsheet?")) {
+      google.script.run
+        .withSuccessHandler(function(res) {
+          alert(res);
+          loadData();
+        })
+        .withFailureHandler(function(err) {
+          alert("Gagal menghapus: " + err.message);
+        })
+        .deleteData(rowId);
+    }
+  }
+
+  function downloadExcel() {
+    let tableHTML = `
+      <table border="1">
+        <thead>
+          <tr style="background-color: #10b981; color: white;">
+            <th>No</th>
+            <th>Timestamp</th>
+            <th>Nama Lengkap</th>
+            <th>Alamat</th>
+            <th>No WhatsApp</th>
+            <th>Tanggal Treatment</th>
+            <th>Jam Treatment</th>
+            <th>Keterangan Pembayaran</th>
+          </tr>
+        </thead>
+        <tbody>
+    `;
+
+    allData.forEach((item, index) => {
+      tableHTML += `
+        <tr>
+          <td>${index + 1}</td>
+          <td>${item.timestamp}</td>
+          <td>${item.nama}</td>
+          <td>${item.alamat}</td>
+          <td>'${item.telepon}</td>
+          <td>${item.tanggal}</td>
+          <td>${item.jam}</td>
+          <td>${item.keterangan}</td>
+        </tr>
+      `;
+    });
+
+    tableHTML += `</tbody></table>`;
+
+    let blob = new Blob(['\ufeff' + tableHTML], { type: 'application/vnd.ms-excel' });
+    let url = URL.createObjectURL(blob);
+    let a = document.createElement('a');
+    a.href = url;
+    a.download = 'Data_Pendaftaran_Treatment.xls';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+  }
+</script>

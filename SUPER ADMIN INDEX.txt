@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <base target="_top">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Admin Pendaftaran</title>
+  <?!= HtmlService.createHtmlOutputFromFile('Style').getContent(); ?>
+</head>
+<body>
+  <div class="container">
+    <header class="header">
+      <h2>Pendaftaran Treatment - Panel Admin</h2>
+      <div class="actions">
+        <button class="btn btn-success" onclick="downloadExcel()">Download Excel (.xls)</button>
+        <button class="btn btn-secondary" onclick="loadData()">Refresh Data</button>
+      </div>
+    </header>
+
+    <div class="filter-box">
+      <label for="sortJam">Urutkan Berdasarkan Jam:</label>
+      <select id="sortJam" onchange="filterAndSortData()">
+        <option value="asc">Jam (Paling Awal ke Akhir)</option>
+        <option value="desc">Jam (Paling Akhir ke Awal)</option>
+      </select>
+      
+      <input type="text" id="searchInput" placeholder="Cari nama / alamat / telepon..." onkeyup="filterAndSortData()">
+    </div>
+
+    <div class="table-responsive">
+      <table id="dataTable">
+        <thead>
+          <tr>
+            <th>No</th>
+            <th>Timestamp</th>
+            <th>Nama Lengkap</th>
+            <th>Alamat</th>
+            <th>No WhatsApp</th>
+            <th>Tanggal Treatment</th>
+            <th>Jam Treatment</th>
+            <th>Keterangan Pembayaran</th>
+            <th>Aksi</th>
+          </tr>
+        </thead>
+        <tbody id="tableBody">
+          <tr><td colspan="9" class="text-center">Memuat data...</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Modal Edit Data -->
+  <div id="editModal" class="modal">
+    <div class="modal-content">
+      <h3>Edit Data Peserta</h3>
+      <input type="hidden" id="editRowId">
+      
+      <div class="form-group">
+        <label>Nama Lengkap:</label>
+        <input type="text" id="editNama">
+      </div>
+      <div class="form-group">
+        <label>Tanggal Treatment:</label>
+        <input type="text" id="editTanggal">
+      </div>
+      <div class="form-group">
+        <label>Jam Treatment:</label>
+        <input type="text" id="editJam">
+      </div>
+      <div class="form-group">
+        <label>Keterangan Pembayaran:</label>
+        <select id="editKeterangan">
+          <option value="Lunas">LUNAS</option>
+          <option value="Belum">BELUM</option>
+        </select>
+      </div>
+
+      <div class="modal-actions">
+        <button class="btn btn-primary" onclick="saveEdit()">Simpan</button>
+        <button class="btn btn-danger" onclick="closeModal()">Batal</button>
+      </div>
+    </div>
+  </div>
+
+  <?!= HtmlService.createHtmlOutputFromFile('Javascript').getContent(); ?>
+</body>
+</html>
