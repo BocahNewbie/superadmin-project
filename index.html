@@ -1,87 +1,141 @@
 <!DOCTYPE html>
-<html>
+<html lang="id">
 <head>
-  <base target="_top">
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Admin Pendaftaran</title>
-  <?!= HtmlService.createHtmlOutputFromFile('Style').getContent(); ?>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pendaftaran Treatment</title>
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <div class="container">
-    <header class="header">
-      <h2>Pendaftaran Treatment - Panel Admin</h2>
-      <div class="actions">
-        <button class="btn btn-success" onclick="downloadExcel()">Download Excel (.xls)</button>
-        <button class="btn btn-secondary" onclick="loadData()">Refresh Data</button>
-      </div>
-    </header>
 
-    <div class="filter-box">
-      <label for="sortJam">Urutkan Berdasarkan Jam:</label>
-      <select id="sortJam" onchange="filterAndSortData()">
-        <option value="asc">Jam (Paling Awal ke Akhir)</option>
-        <option value="desc">Jam (Paling Akhir ke Awal)</option>
-      </select>
-      
-      <input type="text" id="searchInput" placeholder="Cari nama / alamat / telepon..." onkeyup="filterAndSortData()">
+    <div class="page-wrapper">
+        <!-- Kotak Form Pendaftaran -->
+        <div class="card-container">
+            <h2>📝 Pendaftaran Treatment</h2>
+            <form id="pendaftaranForm">
+                <label for="nama">👤 Nama Lengkap</label>
+                <input type="text" id="nama" placeholder="Masukkan nama lengkap" required>
+
+                <label for="alamat">🏠 Alamat</label>
+                <input type="text" id="alamat" placeholder="Masukkan alamat lengkap" required>
+
+                <label for="telepon">📱 No WhatsApp</label>
+                <input type="tel" id="telepon" placeholder="Contoh: 08123456789" required>
+
+                <label for="tanggal">📅 Tanggal Treatment</label>
+                <select id="tanggal" required>
+                    <option value="">-- Pilih Tanggal Treatment --</option>
+                    <option value="30 Oktober 2026">30 Oktober 2026</option>
+                    <option value="31 Oktober 2026">31 Oktober 2026</option>
+                    <option value="1 November 2026">1 November 2026</option>
+                    <option value="2 November 2026">2 November 2026</option>
+                    <option value="3 November 2026">3 November 2026</option>
+                </select>
+
+                <label for="jam">⏰ Jam Treatment</label>
+                <input type="text" id="jam" placeholder="Contoh: Jam 10.00" required>
+
+                <label for="keterangan">💳 Keterangan Pembayaran</label>
+                <select id="keterangan">
+                    <option value="Belum">Belum</option>
+                    <option value="Lunas">Lunas</option>
+                </select>
+
+                <button type="submit" id="submitBtn">✨ Daftar Sekarang</button>
+                <div id="loading" style="display:none; text-align:center; margin-top:12px; color:#5eead4; font-weight:500;">⏳ Sedang memproses data...</div>
+            </form>
+
+            <!-- Tombol Panel Admin / Download Excel -->
+            <div style="margin-top: 25px; border-top: 1px solid rgba(153, 246, 228, 0.2); padding-top: 15px; display: flex; gap: 10px; justify-content: center;">
+                <button type="button" onclick="toggleAdminPanel()" style="background: #0d9488; font-size: 13px; padding: 10px; border-radius: 8px;">🛡️ Panel Admin</button>
+            </div>
+
+            <div class="credit">Credit by BOCAH NEWBIE</div>
+        </div>
+
+        <!-- Kotak Status Kuota & Daftar Peserta Realtime / Panel Admin -->
+        <div class="card-container">
+            <div id="publicViewContainer">
+                <h3>📊 Status Kuota & Daftar Peserta</h3>
+                <div id="groupedTableContainer">
+                    <!-- Tabel per tanggal akan dimuat di sini secara realtime -->
+                </div>
+            </div>
+
+            <!-- Panel Admin (Tersembunyi secara default) -->
+            <div id="adminViewContainer" style="display: none;">
+                <h3>🛡️ Kontrol Super Admin</h3>
+                <div style="margin-bottom: 15px; display: flex; gap: 8px;">
+                    <button type="button" onclick="downloadExcel()" style="background: #10b981; font-size: 12px; padding: 8px;">📥 Download Excel</button>
+                    <button type="button" onclick="toggleAdminPanel()" style="background: #475569; font-size: 12px; padding: 8px;">🔙 Kembali ke Menu Utama</button>
+                </div>
+                <input type="text" id="adminSearch" placeholder="🔍 Cari nama / no WA peserta..." onkeyup="filterAdminTable()" style="margin-bottom: 15px;">
+                <div class="table-responsive" style="max-height: 400px; overflow-y: auto;">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>No</th>
+                                <th>Nama</th>
+                                <th>Tanggal</th>
+                                <th>Jam</th>
+                                <th>Status</th>
+                                <th>Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody id="adminTableBody">
+                            <tr><td colspan="6" style="text-align: center;">Memuat data admin...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
     </div>
 
-    <div class="table-responsive">
-      <table id="dataTable">
-        <thead>
-          <tr>
-            <th>No</th>
-            <th>Timestamp</th>
-            <th>Nama Lengkap</th>
-            <th>Alamat</th>
-            <th>No WhatsApp</th>
-            <th>Tanggal Treatment</th>
-            <th>Jam Treatment</th>
-            <th>Keterangan Pembayaran</th>
-            <th>Aksi</th>
-          </tr>
-        </thead>
-        <tbody id="tableBody">
-          <tr><td colspan="9" class="text-center">Memuat data...</td></tr>
-        </tbody>
-      </table>
+    <!-- Popup Modal Sukses Daftar -->
+    <div id="popupModal" class="modal-overlay" style="display:none;">
+        <div class="modal-card">
+            <div class="modal-icon">🥳🎉</div>
+            <h3>Yeay, Berhasil Terdaftar!</h3>
+            <p>Data treatment kamu sudah tersimpan secara otomatis dan realtime di sistem kami! 🚀✨</p>
+            <button id="closeModalBtn" class="modal-btn">Mantap, Lanjutkan! 👍</button>
+        </div>
     </div>
-  </div>
 
-  <!-- Modal Edit Data -->
-  <div id="editModal" class="modal">
-    <div class="modal-content">
-      <h3>Edit Data Peserta</h3>
-      <input type="hidden" id="editRowId">
-      
-      <div class="form-group">
-        <label>Nama Lengkap:</label>
-        <input type="text" id="editNama">
-      </div>
-      <div class="form-group">
-        <label>Tanggal Treatment:</label>
-        <input type="text" id="editTanggal">
-      </div>
-      <div class="form-group">
-        <label>Jam Treatment:</label>
-        <input type="text" id="editJam">
-      </div>
-      <div class="form-group">
-        <label>Keterangan Pembayaran:</label>
-        <select id="editKeterangan">
-          <option value="Lunas">LUNAS</option>
-          <option value="Belum">BELUM</option>
-        </select>
-      </div>
-
-      <div class="modal-actions">
-        <button class="btn btn-primary" onclick="saveEdit()">Simpan</button>
-        <button class="btn btn-danger" onclick="closeModal()">Batal</button>
-      </div>
+    <!-- Modal Edit Data untuk Admin -->
+    <div id="editModal" class="modal-overlay" style="display:none;">
+        <div class="modal-card" style="text-align: left;">
+            <h3 style="text-align: center; color: #5eead4; border-bottom: 1px solid rgba(153,246,228,0.2); padding-bottom: 10px; margin-bottom: 15px;">✏️ Edit Data Peserta</h3>
+            <form id="editForm" onsubmit="saveEditData(event)">
+                <input type="hidden" id="editOriginalTelp">
+                <label>👤 Nama Lengkap</label>
+                <input type="text" id="editNama" required>
+                <label>🏠 Alamat</label>
+                <input type="text" id="editAlamat" required>
+                <label>📱 No WhatsApp</label>
+                <input type="text" id="editTelepon" required>
+                <label>📅 Tanggal Treatment</label>
+                <select id="editTanggal" required>
+                    <option value="30 Oktober 2026">30 Oktober 2026</option>
+                    <option value="31 Oktober 2026">31 Oktober 2026</option>
+                    <option value="1 November 2026">1 November 2026</option>
+                    <option value="2 November 2026">2 November 2026</option>
+                    <option value="3 November 2026">3 November 2026</option>
+                </select>
+                <label>⏰ Jam Treatment</label>
+                <input type="text" id="editJam" required>
+                <label>💳 Keterangan Pembayaran</label>
+                <select id="editKeterangan">
+                    <option value="Belum">Belum</option>
+                    <option value="Lunas">Lunas</option>
+                </select>
+                <div style="display: flex; gap: 10px; margin-top: 15px;">
+                    <button type="button" onclick="closeEditModal()" style="background: #475569; padding: 10px; border-radius: 8px; color: white; border: none; cursor: pointer; flex: 1;">Batal</button>
+                    <button type="submit" style="background: #0d9488; padding: 10px; border-radius: 8px; color: white; border: none; cursor: pointer; flex: 1;">Simpan</button>
+                </div>
+            </form>
+        </div>
     </div>
-  </div>
 
-  <?!= HtmlService.createHtmlOutputFromFile('Javascript').getContent(); ?>
+    <script src="javascript.js"></script>
 </body>
 </html>
