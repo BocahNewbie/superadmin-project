@@ -1,0 +1,2 @@
+# superadmin-project
+USE THIS FOR SUPER ADMIN OR ADMIN ALL ROLE
