@@ -100,6 +100,19 @@
         </div>
     </div>
 
+    <!-- Modal Konfirmasi Interaktif 2x -->
+    <div id="confirmModal" class="modal-overlay" style="display: none;">
+        <div class="modal-card">
+            <div id="confirmIcon" class="modal-icon">⚠️</div>
+            <h3 id="confirmTitle">Konfirmasi</h3>
+            <p id="confirmDesc">Apakah Anda yakin?</p>
+            <div style="display: flex; gap: 10px;">
+                <button type="button" onclick="closeConfirmModal()" class="modal-btn" style="background: rgba(71, 85, 105, 0.8); color: #ffffff;">Batal</button>
+                <button type="button" id="confirmYesBtn" class="modal-btn" style="background: linear-gradient(135deg, #f87171 0%, #dc2626 100%); color: #ffffff;">Ya, Lanjutkan 🚀</button>
+            </div>
+        </div>
+    </div>
+    
     <script src="javascript.js"></script>
 </body>
 </html>
