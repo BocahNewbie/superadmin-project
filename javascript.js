@@ -1,4 +1,4 @@
-const scriptURL = 'https://script.google.com/macros/s/AKfycbyldKjxJv2y3alt1KesQqZmbKn0AvlMPAlDEuiNI3qXQqvZUc_wbFJm0y3s3PoLi_6z/exec'; 
+const scriptURL = 'https://script.google.com/macros/s/AKfycbz3qgXLqPeHAiPXCQ98n2ff9Ibrz35kzg-pmrlAvXZaucEGnKBnmbKAfGwku6WZ9q6r/exec'; 
 let globalDataCache = [];
 
 document.addEventListener("DOMContentLoaded", function() {
@@ -64,7 +64,7 @@ function parseJamToMinutes(jamStr) {
 window.handleAdminData = function(data) {
     if (!Array.isArray(data)) return;
     
-    // Urutkan berdasarkan Tanggal lalu Jam terkecil terlebih dahulu
+    // Urutkan berdasarkan Tanggal lalu Jam terkecil
     data.sort((a, b) => {
         let dateA = parseTanggalCustom(a.tanggal);
         let dateB = parseTanggalCustom(b.tanggal);
@@ -82,29 +82,29 @@ function renderAdminTable(dataArray) {
     let html = "";
 
     if (dataArray.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="9" style="text-align: center; padding: 30px; color: #99f6e4;">Belum ada data peserta.</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="9" style="text-align: center; padding: 30px; color: #99f6e4;">Belum ada data peserta. 📭</td></tr>';
         return;
     }
 
     dataArray.forEach((item, index) => {
         let tglFormatted = formatTanggal(item.tanggal);
         let statusBadge = item.keterangan === 'Lunas' 
-            ? '<span style="background: #065f46; color: #34d399; padding: 4px 10px; border-radius: 6px; font-weight: 600;">Lunas</span>' 
-            : '<span style="background: #7f1d1d; color: #f87171; padding: 4px 10px; border-radius: 6px; font-weight: 600;">Belum</span>';
+            ? '<span style="background: rgba(52, 211, 153, 0.2); color: #34d399; padding: 4px 10px; border-radius: 6px; font-weight: 600; border: 1px solid rgba(52,211,153,0.3);">Lunas ✅</span>' 
+            : '<span style="background: rgba(248, 113, 113, 0.2); color: #f87171; padding: 4px 10px; border-radius: 6px; font-weight: 600; border: 1px solid rgba(248,113,113,0.3);">Belum ⏳</span>';
         
         html += `
             <tr>
-                <td style="padding: 12px; text-align: center;">${index + 1}</td>
-                <td style="padding: 12px; color: #94a3b8;">${item.timestamp || '-'}</td>
-                <td style="padding: 12px; font-weight: 600; color: #ffffff;">${item.nama || '-'}</td>
-                <td style="padding: 12px; color: #ccfbef;">${item.alamat || '-'}</td>
-                <td style="padding: 12px; color: #99f6e4;">${item.telepon || '-'}</td>
-                <td style="padding: 12px; color: #5eead4; font-weight: 500;">${tglFormatted}</td>
-                <td style="padding: 12px; font-weight: 600; color: #ffffff;">${item.jam || '-'}</td>
-                <td style="padding: 12px;">${statusBadge}</td>
-                <td style="padding: 12px; text-align: center;">
-                    <button type="button" onclick='openEditModal(${JSON.stringify(item)})' style="background:#0284c7; color:white; border:none; padding:6px 12px; border-radius:6px; cursor:pointer; font-weight:600; font-size:12px; margin-right: 4px;">Edit</button>
-                    <button type="button" onclick='confirmDelete("${item.telepon}", "${item.nama}")' style="background:#dc2626; color:white; border:none; padding:6px 12px; border-radius:6px; cursor:pointer; font-weight:600; font-size:12px;">Hapus</button>
+                <td style="text-align: center; color: #5eead4; font-weight: 600;">${index + 1}</td>
+                <td style="color: #94a3b8; font-size: 12px;">${item.timestamp || '-'}</td>
+                <td style="font-weight: 700; color: #ffffff;">${item.nama || '-'}</td>
+                <td style="color: #ccfbef;">${item.alamat || '-'}</td>
+                <td style="color: #99f6e4;">${item.telepon || '-'}</td>
+                <td style="color: #5eead4; font-weight: 600;">${tglFormatted}</td>
+                <td style="font-weight: 600; color: #ffffff;">${item.jam || '-'}</td>
+                <td>${statusBadge}</td>
+                <td style="text-align: center;">
+                    <button type="button" onclick='openEditModal(${JSON.stringify(item)})' style="background:#0284c7; padding:6px 10px; border-radius:6px; font-size:11px; margin-right:4px;">✏️ Edit</button>
+                    <button type="button" onclick='confirmDelete("${item.telepon}", "${item.nama}")' style="background:#dc2626; padding:6px 10px; border-radius:6px; font-size:11px;">🗑️ Hapus</button>
                 </td>
             </tr>
         `;
@@ -155,14 +155,14 @@ function saveEditData(e) {
         body: JSON.stringify(formData)
     })
     .then(() => {
-        alert('🎉 Perubahan berhasil disimpan!');
         closeEditModal();
+        showPopup("🎉 Berhasil!", "Data peserta berhasil diperbarui di sistem.", "✨");
         setTimeout(loadAdminData, 1500);
     })
     .catch(err => alert('Terjadi kesalahan: ' + err));
 }
 
-// Fitur Verifikasi Hapus 2x
+// Verifikasi Hapus 2x
 function confirmDelete(telepon, nama) {
     let step1 = confirm(`⚠️ PERINGATAN!\n\nAnda akan menghapus data peserta atas nama: "${nama}".\nLanjutkan proses penghapusan?`);
     if (step1) {
@@ -186,15 +186,26 @@ function executeDelete(telepon) {
         body: JSON.stringify(formData)
     })
     .then(() => {
-        alert('🗑️ Data berhasil dihapus dari sistem.');
+        showPopup("🗑️ Terhapus!", "Data peserta berhasil dihapus secara permanen.", "🚀");
         setTimeout(loadAdminData, 1500);
     })
     .catch(err => alert('Terjadi kesalahan saat menghapus: ' + err));
 }
 
+function showPopup(title, desc, icon) {
+    document.getElementById('modalTitlePop').innerText = title;
+    document.getElementById('modalDescPop').innerText = desc;
+    document.getElementById('modalIconPop').innerText = icon;
+    document.getElementById('popupModal').style.display = 'flex';
+}
+
+function closePopupModal() {
+    document.getElementById('popupModal').style.display = 'none';
+}
+
 function downloadExcel() {
     if (globalDataCache.length === 0) {
-        alert("Tidak ada data!");
+        alert("Tidak ada data untuk didownload!");
         return;
     }
     let tableHTML = `<table border="1"><thead><tr style="background-color: #0d9488; color: white;"><th>No</th><th>Timestamp</th><th>Nama Lengkap</th><th>Alamat</th><th>No WhatsApp</th><th>Tanggal Treatment</th><th>Jam Treatment</th><th>Keterangan Pembayaran</th></tr></thead><tbody>`;
