@@ -1,4 +1,4 @@
-const scriptURL = 'https://script.google.com/macros/s/AKfycbxx8fjwd0fjAsnrYkEH0aMCRGul5TVc8lp5HoeA9Jt8yq1zXBfp5ySr1eb7GvyI6chb/exec'; 
+const scriptURL = 'https://script.google.com/macros/s/AKfycbyldKjxJv2y3alt1KesQqZmbKn0AvlMPAlDEuiNI3qXQqvZUc_wbFJm0y3s3PoLi_6z/exec'; 
 let globalDataCache = [];
 
 document.addEventListener("DOMContentLoaded", function() {
@@ -64,7 +64,7 @@ function parseJamToMinutes(jamStr) {
 window.handleAdminData = function(data) {
     if (!Array.isArray(data)) return;
     
-    // Urutkan berdasarkan Tanggal terlebih dahulu, lalu Jam terkecil (paling awal)
+    // Urutkan berdasarkan Tanggal lalu Jam terkecil terlebih dahulu
     data.sort((a, b) => {
         let dateA = parseTanggalCustom(a.tanggal);
         let dateB = parseTanggalCustom(b.tanggal);
@@ -82,24 +82,29 @@ function renderAdminTable(dataArray) {
     let html = "";
 
     if (dataArray.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="7" style="text-align: center; padding: 20px;">Belum ada data peserta.</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="9" style="text-align: center; padding: 30px; color: #99f6e4;">Belum ada data peserta.</td></tr>';
         return;
     }
 
     dataArray.forEach((item, index) => {
         let tglFormatted = formatTanggal(item.tanggal);
-        let statusBadge = item.keterangan === 'Lunas' ? '<span style="color: #34d399; font-weight: bold;">Lunas ✅</span>' : '<span style="color: #f87171; font-weight: bold;">Belum ⏳</span>';
+        let statusBadge = item.keterangan === 'Lunas' 
+            ? '<span style="background: #065f46; color: #34d399; padding: 4px 10px; border-radius: 6px; font-weight: 600;">Lunas</span>' 
+            : '<span style="background: #7f1d1d; color: #f87171; padding: 4px 10px; border-radius: 6px; font-weight: 600;">Belum</span>';
         
         html += `
             <tr>
-                <td style="text-align: center;">${index + 1}</td>
-                <td><b>${item.nama || '-'}</b><br><small style="color:#94a3b8;">${item.telepon || ''}</small></td>
-                <td>${tglFormatted}</td>
-                <td>${item.jam || '-'}</td>
-                <td>${statusBadge}</td>
-                <td style="text-align: center; display: flex; gap: 5px; justify-content: center;">
-                    <button type="button" onclick='openEditModal(${JSON.stringify(item)})' style="background:#0d9488; color:white; border:none; padding:6px 10px; border-radius:6px; cursor:pointer; font-size:11px;">✏️ Edit</button>
-                    <button type="button" onclick='confirmDelete("${item.telepon}", "${item.nama}")' style="background:#dc2626; color:white; border:none; padding:6px 10px; border-radius:6px; cursor:pointer; font-size:11px;">🗑️ Hapus</button>
+                <td style="padding: 12px; text-align: center;">${index + 1}</td>
+                <td style="padding: 12px; color: #94a3b8;">${item.timestamp || '-'}</td>
+                <td style="padding: 12px; font-weight: 600; color: #ffffff;">${item.nama || '-'}</td>
+                <td style="padding: 12px; color: #ccfbef;">${item.alamat || '-'}</td>
+                <td style="padding: 12px; color: #99f6e4;">${item.telepon || '-'}</td>
+                <td style="padding: 12px; color: #5eead4; font-weight: 500;">${tglFormatted}</td>
+                <td style="padding: 12px; font-weight: 600; color: #ffffff;">${item.jam || '-'}</td>
+                <td style="padding: 12px;">${statusBadge}</td>
+                <td style="padding: 12px; text-align: center;">
+                    <button type="button" onclick='openEditModal(${JSON.stringify(item)})' style="background:#0284c7; color:white; border:none; padding:6px 12px; border-radius:6px; cursor:pointer; font-weight:600; font-size:12px; margin-right: 4px;">Edit</button>
+                    <button type="button" onclick='confirmDelete("${item.telepon}", "${item.nama}")' style="background:#dc2626; color:white; border:none; padding:6px 12px; border-radius:6px; cursor:pointer; font-weight:600; font-size:12px;">Hapus</button>
                 </td>
             </tr>
         `;
@@ -111,8 +116,9 @@ function filterAdminTable() {
     let keyword = document.getElementById('adminSearch').value.toLowerCase();
     let filtered = globalDataCache.filter(item => {
         let nama = (item.nama || '').toLowerCase();
+        let alamat = (item.alamat || '').toLowerCase();
         let telp = (item.telepon || '').toLowerCase();
-        return nama.includes(keyword) || telp.includes(keyword);
+        return nama.includes(keyword) || alamat.includes(keyword) || telp.includes(keyword);
     });
     renderAdminTable(filtered);
 }
@@ -158,10 +164,8 @@ function saveEditData(e) {
 
 // Fitur Verifikasi Hapus 2x
 function confirmDelete(telepon, nama) {
-    // Verifikasi 1 (Alert Pertama)
     let step1 = confirm(`⚠️ PERINGATAN!\n\nAnda akan menghapus data peserta atas nama: "${nama}".\nLanjutkan proses penghapusan?`);
     if (step1) {
-        // Verifikasi 2 (Alert Konfirmasi Akhir)
         let step2 = confirm(`🚨 KONFIRMASI AKHIR!\n\nData yang dihapus tidak dapat dikembalikan lagi. Yakin ingin menghapus "${nama}" secara permanen?`);
         if (step2) {
             executeDelete(telepon);
@@ -193,16 +197,16 @@ function downloadExcel() {
         alert("Tidak ada data!");
         return;
     }
-    let tableHTML = `<table border="1"><thead><tr style="background-color: #0d9488; color: white;"><th>No</th><th>Nama</th><th>Alamat</th><th>No WA</th><th>Tanggal</th><th>Jam</th><th>Status</th></tr></thead><tbody>`;
+    let tableHTML = `<table border="1"><thead><tr style="background-color: #0d9488; color: white;"><th>No</th><th>Timestamp</th><th>Nama Lengkap</th><th>Alamat</th><th>No WhatsApp</th><th>Tanggal Treatment</th><th>Jam Treatment</th><th>Keterangan Pembayaran</th></tr></thead><tbody>`;
     globalDataCache.forEach((item, index) => {
-        tableHTML += `<tr><td>${index+1}</td><td>${item.nama||''}</td><td>${item.alamat||''}</td><td>'${item.telepon||''}</td><td>${formatTanggal(item.tanggal)||''}</td><td>${item.jam||''}</td><td>${item.keterangan||''}</td></tr>`;
+        tableHTML += `<tr><td>${index+1}</td><td>${item.timestamp||''}</td><td>${item.nama||''}</td><td>${item.alamat||''}</td><td>'${item.telepon||''}</td><td>${formatTanggal(item.tanggal)||''}</td><td>${item.jam||''}</td><td>${item.keterangan||''}</td></tr>`;
     });
     tableHTML += `</tbody></table>`;
     let blob = new Blob(['\ufeff' + tableHTML], { type: 'application/vnd.ms-excel' });
     let url = URL.createObjectURL(blob);
     let a = document.createElement('a');
     a.href = url;
-    a.download = 'Data_Peserta_Admin.xls';
+    a.download = 'Laporan_Pendaftaran_Treatment.xls';
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
