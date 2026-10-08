@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pendaftaran Treatment - Panel Admin</title>
+    <title>Super Admin</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -13,7 +13,7 @@
             
             <!-- Header Admin -->
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; flex-wrap: wrap; gap: 15px; border-bottom: 1px solid rgba(153, 246, 228, 0.2); padding-bottom: 15px;">
-                <h2 style="margin: 0; border: none; padding: 0;">🛡️ Pendaftaran Treatment - Panel Admin</h2>
+                <h2 style="margin: 0; border: none; padding: 0;">🛡️ Panel Admin</h2>
                 <div style="display: flex; gap: 10px;">
                     <button type="button" onclick="downloadExcel()" style="width: auto; padding: 10px 16px; background: linear-gradient(135deg, #0d9488 0%, #0f766e 100%);">📥 Download Excel</button>
                     <button type="button" onclick="loadAdminData()" style="width: auto; padding: 10px 16px; background: linear-gradient(135deg, #134e4a 0%, #0d2624 100%);">🔄 Refresh</button>
@@ -47,7 +47,7 @@
                 </table>
             </div>
             
-            <div class="credit">Super Admin Dashboard - BOCAH NEWBIE</div>
+            <div class="credit">Super Admin Dashboard by <span>BOCAH NEWBIE</span></div>
         </div>
     </div>
 
@@ -56,7 +56,7 @@
         <div class="modal-card" style="text-align: left;">
             <div class="modal-icon">✏️</div>
             <h3>Edit Data Peserta</h3>
-            <p style="margin-bottom: 15px; font-size: 13px;">Ubah informasi detail peserta di bawah ini.</p>
+            <p style="margin-bottom: 15px; font-size: 13px;">Silahkan edit data perserta.</p>
             
             <form id="editForm" onsubmit="saveEditData(event)">
                 <input type="hidden" id="editOriginalTelp">
