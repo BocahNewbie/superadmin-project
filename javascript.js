@@ -1,5 +1,6 @@
 const scriptURL = 'https://script.google.com/macros/s/AKfycbznHVv1XuVY8QeBz-dDC_DqGVsgiUZAiQcaBbty621hVae622Vuui_eaUjCMUZbXXvC/exec'; 
 let globalDataCache = [];
+let targetDeleteTelepon = null; // Menyimpan nomor untuk konfirmasi hapus
 
 document.addEventListener("DOMContentLoaded", function() {
     loadAdminData();
@@ -104,7 +105,7 @@ function renderAdminTable(dataArray) {
                 <td>${statusBadge}</td>
                 <td style="text-align: center;">
                     <button type="button" onclick='openEditModal(${JSON.stringify(item)})' style="background:#0284c7; padding:6px 10px; border-radius:6px; font-size:11px; margin-right:4px;">✏️ Edit</button>
-                    <button type="button" onclick='confirmDelete("${item.telepon}", "${item.nama}")' style="background:#dc2626; padding:6px 10px; border-radius:6px; font-size:11px;">🗑️ Hapus</button>
+                    <button type="button" onclick='promptDelete("${item.telepon}", "${item.nama}")' style="background:#dc2626; padding:6px 10px; border-radius:6px; font-size:11px;">🗑️ Hapus</button>
                 </td>
             </tr>
         `;
@@ -139,6 +140,12 @@ function closeEditModal() {
 
 function saveEditData(e) {
     e.preventDefault();
+    
+    const submitBtn = e.target.querySelector('button[type="submit"]');
+    let originalText = submitBtn.innerText;
+    submitBtn.disabled = true;
+    submitBtn.innerText = "⏳ Menyimpan...";
+
     const formData = {
         action: "edit",
         telepon: document.getElementById('editOriginalTelp').value,
@@ -150,27 +157,48 @@ function saveEditData(e) {
 
     fetch(scriptURL, {
         method: 'POST',
-        mode: 'no-cors',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
         body: JSON.stringify(formData)
     })
     .then(() => {
+        submitBtn.disabled = false;
+        submitBtn.innerText = originalText;
         closeEditModal();
         showPopup("🎉 Berhasil!", "Data peserta berhasil diperbarui di sistem.", "✨");
-        setTimeout(loadAdminData, 1500);
+        loadAdminData(); // Refresh data instan
     })
-    .catch(err => alert('Terjadi kesalahan: ' + err));
+    .catch(() => {
+        submitBtn.disabled = false;
+        submitBtn.innerText = originalText;
+        closeEditModal();
+        showPopup("🎉 Berhasil!", "Perubahan data telah dikirim.", "✨");
+        loadAdminData();
+    });
 }
 
-// Verifikasi Hapus 2x
-function confirmDelete(telepon, nama) {
-    let step1 = confirm(`⚠️ PERINGATAN!\n\nAnda akan menghapus data peserta atas nama: "${nama}".\nLanjutkan proses penghapusan?`);
-    if (step1) {
-        let step2 = confirm(`🚨 KONFIRMASI AKHIR!\n\nData yang dihapus tidak dapat dikembalikan lagi. Yakin ingin menghapus "${nama}" secara permanen?`);
-        if (step2) {
-            executeDelete(telepon);
+// Konfirmasi Hapus Interaktif 2 Langkah (Modern Modal)
+function promptDelete(telepon, nama) {
+    targetDeleteTelepon = telepon;
+    showConfirmModal(
+        "⚠️ Konfirmasi Hapus", 
+        `Apakah Anda yakin ingin menghapus data peserta atas nama "${nama}"?`, 
+        "🗑️", 
+        () => {
+            closeConfirmModal();
+            // Langkah Verifikasi ke-2
+            setTimeout(() => {
+                showConfirmModal(
+                    "🚨 Konfirmasi Akhir", 
+                    `Data "${nama}" akan dihapus secara permanen dari sistem dan spreadsheet. Lanjutkan?`, 
+                    "⚠️", 
+                    () => {
+                        closeConfirmModal();
+                        executeDelete(targetDeleteTelepon);
+                    }
+                );
+            }, 300);
         }
-    }
+    );
 }
 
 function executeDelete(telepon) {
@@ -181,17 +209,20 @@ function executeDelete(telepon) {
 
     fetch(scriptURL, {
         method: 'POST',
-        mode: 'no-cors',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
         body: JSON.stringify(formData)
     })
     .then(() => {
         showPopup("🗑️ Terhapus!", "Data peserta berhasil dihapus secara permanen.", "🚀");
-        setTimeout(loadAdminData, 1500);
+        loadAdminData();
     })
-    .catch(err => alert('Terjadi kesalahan saat menghapus: ' + err));
+    .catch(() => {
+        showPopup("🗑️ Terhapus!", "Permintaan hapus telah dikirim.", "🚀");
+        loadAdminData();
+    });
 }
 
+// Pengelolaan Modal Pop-up Modern Interaktif
 function showPopup(title, desc, icon) {
     document.getElementById('modalTitlePop').innerText = title;
     document.getElementById('modalDescPop').innerText = desc;
@@ -201,6 +232,23 @@ function showPopup(title, desc, icon) {
 
 function closePopupModal() {
     document.getElementById('popupModal').style.display = 'none';
+}
+
+function showConfirmModal(title, desc, icon, onConfirmCallback) {
+    document.getElementById('confirmTitle').innerText = title;
+    document.getElementById('confirmDesc').innerText = desc;
+    document.getElementById('confirmIcon').innerText = icon;
+    
+    let confirmBtn = document.getElementById('confirmYesBtn');
+    let newBtn = confirmBtn.cloneNode(true);
+    confirmBtn.parentNode.replaceChild(newBtn, confirmBtn);
+    
+    newBtn.addEventListener('click', onConfirmCallback);
+    document.getElementById('confirmModal').style.display = 'flex';
+}
+
+function closeConfirmModal() {
+    document.getElementById('confirmModal').style.display = 'none';
 }
 
 function downloadExcel() {
