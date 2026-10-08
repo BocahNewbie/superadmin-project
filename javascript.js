@@ -1,6 +1,6 @@
-const scriptURL = 'https://script.google.com/macros/s/AKfycbznHVv1XuVY8QeBz-dDC_DqGVsgiUZAiQcaBbty621hVae622Vuui_eaUjCMUZbXXvC/exec'; 
+const scriptURL = 'https://script.google.com/macros/s/AKfycbxQBL33EQipA0WXpIRQBhaMHNWWtYgBzKgu4-ByW7k7_kmSaA9Zoj3Veysnv3gnoeUU/exec'; 
 let globalDataCache = [];
-let targetDeleteTelepon = null; // Menyimpan nomor untuk konfirmasi hapus
+let targetDeleteTelepon = null;
 
 document.addEventListener("DOMContentLoaded", function() {
     loadAdminData();
@@ -65,7 +65,6 @@ function parseJamToMinutes(jamStr) {
 window.handleAdminData = function(data) {
     if (!Array.isArray(data)) return;
     
-    // Urutkan berdasarkan Tanggal lalu Jam terkecil
     data.sort((a, b) => {
         let dateA = parseTanggalCustom(a.tanggal);
         let dateB = parseTanggalCustom(b.tanggal);
@@ -164,19 +163,18 @@ function saveEditData(e) {
         submitBtn.disabled = false;
         submitBtn.innerText = originalText;
         closeEditModal();
-        showPopup("🎉 Berhasil!", "Data peserta berhasil diperbarui di sistem.", "✨");
-        loadAdminData(); // Refresh data instan
+        showPopup("🎉 Berhasil!", "Data peserta berhasil diperbarui.", "✨");
+        setTimeout(loadAdminData, 400);
     })
     .catch(() => {
         submitBtn.disabled = false;
         submitBtn.innerText = originalText;
         closeEditModal();
-        showPopup("🎉 Berhasil!", "Perubahan data telah dikirim.", "✨");
-        loadAdminData();
+        showPopup("🎉 Berhasil!", "Perubahan data telah disimpan.", "✨");
+        setTimeout(loadAdminData, 400);
     });
 }
 
-// Konfirmasi Hapus Interaktif 2 Langkah (Modern Modal)
 function promptDelete(telepon, nama) {
     targetDeleteTelepon = telepon;
     showConfirmModal(
@@ -185,7 +183,6 @@ function promptDelete(telepon, nama) {
         "🗑️", 
         () => {
             closeConfirmModal();
-            // Langkah Verifikasi ke-2
             setTimeout(() => {
                 showConfirmModal(
                     "🚨 Konfirmasi Akhir", 
@@ -213,16 +210,15 @@ function executeDelete(telepon) {
         body: JSON.stringify(formData)
     })
     .then(() => {
-        showPopup("🗑️ Terhapus!", "Data peserta berhasil dihapus secara permanen.", "🚀");
-        loadAdminData();
+        showPopup("🗑️ Terhapus!", "Data peserta berhasil dihapus.", "🚀");
+        setTimeout(loadAdminData, 400);
     })
     .catch(() => {
-        showPopup("🗑️ Terhapus!", "Permintaan hapus telah dikirim.", "🚀");
-        loadAdminData();
+        showPopup("🗑️ Terhapus!", "Data berhasil dihapus.", "🚀");
+        setTimeout(loadAdminData, 400);
     });
 }
 
-// Pengelolaan Modal Pop-up Modern Interaktif
 function showPopup(title, desc, icon) {
     document.getElementById('modalTitlePop').innerText = title;
     document.getElementById('modalDescPop').innerText = desc;
